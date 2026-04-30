@@ -1,0 +1,27 @@
+[project]
+name = "book-agent"
+version = "0.1.0"
+description = "A web-based AI learning coach grounded in PDF books."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "jieba>=0.42.1",
+    "openai>=1.0.0",
+    "pydantic>=2.7.0",
+    "PyMuPDF>=1.24.0",
+    "uvicorn>=0.30.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx>=0.27.0",
+    "pytest>=8.0.0",
+]
+
+[project.scripts]
+book-agent-api = "book_agent.main:run"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p no:cacheprovider -p no:tmpdir"

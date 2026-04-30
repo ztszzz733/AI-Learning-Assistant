@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Book Agent</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <header class="sidebar-header">
+          <div>
+            <h1>Book Agent</h1>
+            <p id="session-count">0 个学习进程</p>
+          </div>
+          <button id="refresh-sessions" class="icon-button" type="button" title="刷新">↻</button>
+        </header>
+
+        <section class="create-panel" aria-label="新建学习">
+          <h2>模型配置</h2>
+          <p id="llm-status" class="session-meta">正在读取配置</p>
+          <label>
+            API Key
+            <input id="llm-api-key" type="password" placeholder="留空则不修改已有 key" autocomplete="off" />
+          </label>
+          <label>
+            Base URL
+            <input id="llm-base-url" type="text" placeholder="https://api.deepseek.com" />
+          </label>
+          <label>
+            模型
+            <select id="llm-model">
+              <option value="deepseek-v4-flash">DeepSeek V4 Flash</option>
+              <option value="deepseek-v4-pro">DeepSeek V4 Pro</option>
+              <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
+              <option value="custom">自定义模型</option>
+            </select>
+          </label>
+          <label id="custom-model-row" class="hidden">
+            自定义模型
+            <input id="llm-custom-model" type="text" placeholder="例如 gpt-4.1-mini" />
+          </label>
+          <div class="field-row">
+            <label>
+              推理
+              <select id="llm-reasoning">
+                <option value="">默认</option>
+                <option value="low">low</option>
+                <option value="medium">medium</option>
+                <option value="high">high</option>
+              </select>
+            </label>
+            <label>
+              Thinking
+              <select id="llm-thinking">
+                <option value="">默认</option>
+                <option value="enabled">enabled</option>
+                <option value="disabled">disabled</option>
+              </select>
+            </label>
+          </div>
+          <div class="button-row">
+            <button id="save-llm-settings" class="primary-button" type="button">保存配置</button>
+            <button id="clear-llm-key" type="button">清除 Key</button>
+          </div>
+        </section>
+
+        <section class="create-panel" aria-label="新建学习">
+          <h2>新建学习</h2>
+          <label>
+            PDF 路径
+            <input id="pdf-path" type="text" placeholder="D:\books\example.pdf" />
+          </label>
+          <label>
+            书名
+            <input id="book-title" type="text" placeholder="可留空" />
+          </label>
+          <div class="field-row">
+            <label>
+              模式
+              <select id="learning-mode">
+                <option value="humanities">humanities</option>
+                <option value="programming">programming</option>
+              </select>
+            </label>
+            <label>
+              每次页数
+              <input id="page-window-size" type="number" min="1" max="60" value="12" />
+            </label>
+          </div>
+          <label>
+            水平
+            <select id="learner-level">
+              <option value="beginner">beginner</option>
+              <option value="intermediate">intermediate</option>
+              <option value="advanced">advanced</option>
+            </select>
+          </label>
+          <button id="create-study" class="primary-button" type="button">创建学习进程</button>
+        </section>
+
+        <section class="session-panel" aria-label="学习进程">
+          <h2>学习进程</h2>
+          <div id="session-list" class="session-list"></div>
+        </section>
+      </aside>
+
+      <main class="workspace">
+        <header class="workspace-header">
+          <div>
+            <p class="eyebrow">当前学习</p>
+            <h2 id="active-title">选择或创建一个学习进程</h2>
+            <p id="active-meta">进度会自动保存</p>
+          </div>
+          <div class="header-actions">
+            <label class="window-control">
+              后续每课页数
+              <input id="session-page-window-size" type="number" min="1" max="60" value="12" disabled />
+            </label>
+            <button id="save-page-window-size" type="button" disabled>调整页数</button>
+            <button id="prev-lesson" type="button" disabled>上一课</button>
+            <button id="next-lesson" type="button" disabled>下一课</button>
+            <button id="delete-session" type="button" disabled>删除</button>
+          </div>
+        </header>
+
+        <section class="reply-surface" aria-label="分页回复">
+          <div class="reply-toolbar">
+            <div>
+              <p class="eyebrow">模块分页</p>
+              <h3 id="page-title">暂无回复</h3>
+            </div>
+            <div class="pager-controls">
+              <button id="prev-page" class="icon-button" type="button" disabled title="上一页">‹</button>
+              <span id="page-count">0 / 0</span>
+              <button id="next-page" class="icon-button" type="button" disabled title="下一页">›</button>
+            </div>
+          </div>
+          <article id="reply-page" class="reply-page empty">选择学习进程后，发送一条消息开始学习。</article>
+          <div id="reference-strip" class="reference-strip"></div>
+        </section>
+
+        <section class="qa-surface" aria-label="随时问答">
+          <div class="qa-header">
+            <div>
+              <p class="eyebrow">随时问答</p>
+              <h3>不覆盖主线学习</h3>
+            </div>
+            <button id="clear-qa" type="button">清空本页问答</button>
+          </div>
+          <div id="qa-list" class="qa-list empty">学习过程中提出的问题会显示在这里，主线课程分页会保持不变。</div>
+        </section>
+
+        <section class="composer" aria-label="发送消息">
+          <div class="composer-box">
+            <label>
+              学习推进
+              <textarea id="message-input" rows="3" placeholder="例如：先带我学这一课，讲重点。"></textarea>
+            </label>
+            <button id="send-message" class="primary-button" type="button" disabled>发送</button>
+          </div>
+          <div class="composer-box">
+            <label>
+              随时提问
+              <textarea id="qa-input" rows="3" placeholder="例如：这里的索引为什么从 0 开始？"></textarea>
+            </label>
+            <button id="ask-question" class="primary-button" type="button" disabled>提问</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
